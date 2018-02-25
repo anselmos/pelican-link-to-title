@@ -1,0 +1,1 @@
+from pelican_link_to_title import register
