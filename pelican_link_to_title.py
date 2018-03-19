@@ -27,9 +27,17 @@ def link_to_title_plugin(generator):
         article._content = str(soup).decode("utf-8")
 
 def read_page(url_page):
-    r = urllib.urlopen(url_page).read()
-    soup = BeautifulSoup(r , "html.parser")
-    return soup.find("title").string
+    import redis
+    redconn = redis.Redis(host='localhost', port=6379, db=0)
+    found = redconn.get(url_page)
+    if not found:
+        r = urllib.urlopen(url_page).read()
+        soup = BeautifulSoup(r , "html.parser")
+        title = soup.find("title").string
+        redconn.set(url_page, title)
+        return title
+    else:
+        return found
 
 def register():
     """ Registers Plugin """
