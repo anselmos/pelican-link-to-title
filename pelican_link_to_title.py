@@ -39,6 +39,28 @@ def read_page(url_page):
     else:
         return found
 
+
+def content_object_init(instance):
+    if instance._content is not None:
+        content = instance._content
+        soup = BeautifulSoup(content, "html5lib")
+
+        for ctbl in soup.find_all('ahref'):
+            url_page = ctbl.contents[0]
+            if url_page:
+                if "http://" in url_page or "https://" in url_page:
+                    ctbl.name = "a"
+            try:
+                ctbl.string = read_page(url_page)
+            except:
+                pass
+            ctbl.attrs = {"href": url_page}
+        instance._content = soup.decode()
+            # If beautiful soup appended html tags.
+        if instance._content.startswith('<html>'):
+            instance._content = instance._content[12:-14]
+
 def register():
     """ Registers Plugin """
-    signals.article_generator_finalized.connect(link_to_title_plugin)
+    signals.content_object_init.connect(content_object_init)
+    # signals.article_generator_finalized.connect(link_to_title_plugin)
