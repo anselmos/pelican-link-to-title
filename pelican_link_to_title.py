@@ -2,7 +2,7 @@
 """ This is a main script for pelican_link_to_title """
 from pelican import signals
 from bs4 import BeautifulSoup
-import urllib
+import requests
 
 
 def link_to_title_plugin(generator):
@@ -31,7 +31,7 @@ def read_page(url_page):
     redconn = redis.Redis(host='localhost', port=6379, db=0)
     found = redconn.get(url_page)
     if not found:
-        r = urllib.urlopen(url_page).read()
+        r = requests.get(url_page).text
         soup = BeautifulSoup(r , "html.parser")
         title = soup.find("title").string
         redconn.set(url_page, title)
