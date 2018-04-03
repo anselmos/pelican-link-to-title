@@ -31,13 +31,28 @@ def read_page(url_page):
     redconn = redis.Redis(host='localhost', port=6379, db=0)
     found = redconn.get(url_page)
     if not found:
-        r = requests.get(url_page).text
-        soup = BeautifulSoup(r , "html.parser")
-        title = soup.find("title").string
-        redconn.set(url_page, title)
-        return title
+        header_response = requests.head(url_page)
+        if "text/html" in header_response.headers["content-type"]:
+            html = requests.get(url_page).text
+            soup = BeautifulSoup(html , "html.parser")
+            title = soup.find("title").string
+            redconn.set(url_page, title)
+            return title
+        else:
+            return get_non_html_page_title(url_page, header_response)
     else:
         return found
+
+def get_non_html_page_title(url_page, header_response):
+    file_str = url_page.split("/")[-1]
+    file_ext = file_str.split(".")
+    url_domain = url_page.split("//")[1].split("/")[0]
+    if len(file_ext) > 1:
+        # file with extension in url.
+        return "Url to {} file: {} on domain: {}".format(file_ext[-1], file_str, url_domain)
+    else:
+        # no file with extension in url
+        return "Url to: {}".format(url_page)
 
 def register():
     """ Registers Plugin """
